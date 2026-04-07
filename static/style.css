@@ -1,0 +1,57 @@
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(-45deg, #1b5e20, #43a047, #66bb6a, #a5d6a7);
+    background-size: 400% 400%;
+    animation: gradientBG 10s ease infinite;
+    color: white;
+    text-align: center;
+}
+
+.container {
+    margin-top: 80px;
+}
+
+.title {
+    font-size: 40px;
+}
+
+.upload-box {
+    padding: 30px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 15px;
+}
+
+input[type="file"] {
+    display: none;
+}
+
+.custom-file {
+    background: white;
+    color: green;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.btn {
+    margin-top: 10px;
+    padding: 10px;
+    background: #00c853;
+    border: none;
+    border-radius: 8px;
+    color: white;
+}
+
+.result-box {
+    margin-top: 20px;
+    background: rgba(0,0,0,0.3);
+    padding: 20px;
+    border-radius: 10px;
+}
+
+@keyframes gradientBG {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}

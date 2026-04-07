@@ -1,0 +1,94 @@
+{
+  "Potato___Early_blight": {
+    "plant": "Potato",
+    "disease": "Early Blight",
+    "cause": "Fungal infection (Alternaria)",
+    "remedy": "Apply fungicide and remove infected leaves",
+    "prevention": "Use crop rotation and avoid wet conditions"
+  },
+  "Potato___Late_blight": {
+    "plant": "Potato",
+    "disease": "Late Blight",
+    "cause": "Water mold (Phytophthora)",
+    "remedy": "Use copper-based fungicide",
+    "prevention": "Ensure proper drainage and avoid moisture"
+  },
+  "Potato___healthy": {
+    "plant": "Potato",
+    "disease": "Healthy",
+    "cause": "No disease",
+    "remedy": "No treatment needed",
+    "prevention": "Maintain proper nutrients and watering"
+  },
+
+  "Tomato___Bacterial_spot": {
+    "plant": "Tomato",
+    "disease": "Bacterial Spot",
+    "cause": "Bacteria (Xanthomonas)",
+    "remedy": "Use bactericide sprays and remove infected parts",
+    "prevention": "Use disease-free seeds and avoid touching wet plants"
+  },
+  "Tomato___Early_blight": {
+    "plant": "Tomato",
+    "disease": "Early Blight",
+    "cause": "Fungal infection (Alternaria)",
+    "remedy": "Apply fungicide and remove infected leaves",
+    "prevention": "Avoid overhead watering and maintain spacing"
+  },
+  "Tomato___healthy": {
+    "plant": "Tomato",
+    "disease": "Healthy",
+    "cause": "No disease",
+    "remedy": "No treatment needed",
+    "prevention": "Maintain balanced fertilizer and watering"
+  },
+  "Tomato___Late_blight": {
+    "plant": "Tomato",
+    "disease": "Late Blight",
+    "cause": "Water mold (Phytophthora)",
+    "remedy": "Use copper-based fungicide and remove infected plants",
+    "prevention": "Improve air circulation and keep leaves dry"
+  },
+  "Tomato___Leaf_Mold": {
+    "plant": "Tomato",
+    "disease": "Leaf Mold",
+    "cause": "Fungal infection in humid conditions",
+    "remedy": "Apply fungicide",
+    "prevention": "Reduce humidity and ensure ventilation"
+  },
+  "Tomato___Septoria_leaf_spot": {
+    "plant": "Tomato",
+    "disease": "Septoria Leaf Spot",
+    "cause": "Fungus (Septoria)",
+    "remedy": "Spray fungicide and remove infected leaves",
+    "prevention": "Crop rotation and remove plant debris"
+  },
+  "Tomato___Spider_mites Two-spotted_spider_mite": {
+    "plant": "Tomato",
+    "disease": "Spider Mites",
+    "cause": "Tiny insects feeding on leaves",
+    "remedy": "Use neem oil or insecticide spray",
+    "prevention": "Keep plant hydrated and monitor regularly"
+  },
+  "Tomato___Target_Spot": {
+    "plant": "Tomato",
+    "disease": "Target Spot",
+    "cause": "Fungal infection",
+    "remedy": "Apply fungicide",
+    "prevention": "Avoid overcrowding and wet leaves"
+  },
+  "Tomato___Tomato_mosaic_virus": {
+    "plant": "Tomato",
+    "disease": "Mosaic Virus",
+    "cause": "Viral infection",
+    "remedy": "No cure, remove infected plant",
+    "prevention": "Use resistant seeds and control insects"
+  },
+  "Tomato___Tomato_Yellow_Leaf_Curl_Virus": {
+    "plant": "Tomato",
+    "disease": "Yellow Leaf Curl Virus",
+    "cause": "Virus spread by whiteflies",
+    "remedy": "Remove infected plants",
+    "prevention": "Control insects and use resistant varieties"
+  }
+}

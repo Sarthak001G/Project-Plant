@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>🌿 Plant Disease Detector</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="container">
+
+    <h1 class="title">🌿 Plant Disease Detection</h1>
+    <p class="subtitle">Upload a leaf image to detect disease instantly</p>
+
+    <form method="POST" enctype="multipart/form-data" class="upload-box">
+        <input type="file" name="image" id="fileInput" required>
+        <label for="fileInput" class="custom-file">📁 Choose Image</label>
+        <button type="submit" class="btn">🔍 Predict</button>
+    </form>
+
+    {% if prediction %}
+    <div class="result-box">
+        <h2>Prediction:</h2>
+        <p class="result">{{ prediction }}</p>
+    </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>
