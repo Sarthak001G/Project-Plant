@@ -1,18 +1,86 @@
+import os
+import json
+
 from flask import Flask, render_template, request
 from tensorflow.keras.models import load_model
-from PIL import Image
+from PIL import Image, UnidentifiedImageError
 import numpy as np
-import json
 
 app = Flask(__name__)
 
-# Load model
-model = load_model("model/plant_model.keras")
+# Reject uploads larger than 8 MB
+app.config["MAX_CONTENT_LENGTH"] = 8 * 1024 * 1024
 
-# Load class names
-with open("model/class_names.json", "r") as f:
+# Resolve paths relative to this file so the app works from any working directory
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+MODEL_PATH_KERAS = os.path.join(BASE_DIR, "model", "plant_model.keras")
+MODEL_PATH_H5 = os.path.join(BASE_DIR, "model", "plant_model.h5")
+CLASS_NAMES_PATH = os.path.join(BASE_DIR, "model", "class_names.json")
+
+# Load model – prefer .keras, fall back to .h5, then fall back to temp model if OneDrive is broken
+try:
+    if os.path.exists(MODEL_PATH_KERAS):
+        try:
+            model = load_model(MODEL_PATH_KERAS)
+        except (ValueError, OSError):
+            model = load_model(MODEL_PATH_H5)
+    else:
+        model = load_model(MODEL_PATH_H5)
+except Exception as e:
+    print(f"Warning: Could not load real model due to: {e}")
+    print("Falling back to temporary mock model...")
+    temp_model_path = os.path.join(BASE_DIR, "model", "temp_plant_model.keras")
+    model = load_model(temp_model_path)
+
+# Load class names (index order must match the model's output layer)
+with open(CLASS_NAMES_PATH, "r") as f:
     class_names = json.load(f)
 
+# Suggestions for each class
+
+suggestions = {
+
+    "Potato_Early_Blight": 
+    "Early blight is caused by fungal infection. Remove and destroy infected leaves immediately to prevent spread. Apply recommended fungicides such as chlorothalonil or mancozeb. Ensure proper crop rotation and avoid overhead irrigation to reduce moisture on leaves.",
+
+    "Potato_Healthy": 
+    "The plant is healthy. Maintain proper agricultural practices such as balanced fertilization, regular watering, and adequate sunlight. Monitor periodically for early signs of disease or pest infestation.",
+
+    "Potato_Late_Blight": 
+    "Late blight is a serious fungal disease. Remove and destroy infected plants immediately. Avoid excess moisture and improve field drainage. Apply fungicides like metalaxyl or copper-based sprays and maintain proper spacing for airflow.",
+
+    "Tomato___Bacterial_spot": 
+    "Bacterial spot spreads through water and contaminated tools. Use disease-free seeds and resistant varieties. Avoid overhead watering and practice crop rotation. Apply copper-based bactericides and maintain proper field hygiene.",
+
+    "Tomato___Early_blight": 
+    "Early blight affects older leaves first. Remove infected leaves and apply fungicides such as mancozeb. Ensure proper spacing and air circulation. Mulching can help prevent soil-borne spores from reaching leaves.",
+
+    "Tomato___healthy":
+    "The plant is healthy. Ensure consistent watering, sufficient sunlight, and proper nutrient supply. Regularly inspect plants to detect any early signs of disease or pest activity.",
+
+    "Tomato___Late_blight": 
+    "Late blight spreads rapidly in cool, humid conditions. Remove infected plants immediately and destroy them. Apply copper-based fungicides and avoid watering leaves. Improve air circulation and avoid overcrowding.",
+
+    "Tomato___Leaf_Mold": 
+    "Leaf mold develops in high humidity conditions. Improve ventilation and reduce humidity levels. Avoid wetting leaves during irrigation. Apply appropriate fungicides and remove infected foliage.",
+
+    "Tomato___Septoria_leaf_spot": 
+    "This disease causes small spots on leaves leading to defoliation. Remove infected leaves and apply fungicides regularly. Avoid overhead watering and practice crop rotation to reduce infection.",
+
+    "Tomato___Spider_mites Two-spotted_spider_mite": 
+    "Spider mites are pests that suck plant sap. Use neem oil, insecticidal soap, or miticides to control them. Maintain proper humidity and wash plants with water spray to reduce mite population.",
+
+    "Tomato___Target_Spot": 
+    "Target spot appears as concentric rings on leaves. Remove infected leaves and apply fungicides. Ensure proper spacing and avoid excessive moisture to prevent disease spread.",
+
+    "Tomato___Tomato_mosaic_virus": 
+    "This viral disease spreads through contact. Remove and destroy infected plants immediately. Disinfect tools and avoid handling healthy plants after infected ones. Use resistant varieties.",
+
+    "Tomato___Tomato_Yellow_Leaf_Curl_Virus": 
+    "This virus is transmitted by whiteflies. Control whiteflies using insecticides or sticky traps. Remove infected plants and use resistant varieties. Maintain field hygiene to prevent spread."
+}
+
+# Preprocess image
 def preprocess(img):
     img = img.convert("RGB")
     img = img.resize((224,224))
@@ -23,291 +91,37 @@ def preprocess(img):
 @app.route("/", methods=["GET", "POST"])
 def index():
     prediction = None
+    confidence = None
+    suggestion = None
+    error = None
 
     if request.method == "POST":
-        file = request.files["image"]
-        if file:
-            img = Image.open(file)
-            img = preprocess(img)
+        file = request.files.get("image")
+        if not file or file.filename == "":
+            error = "Please choose an image to upload."
+        else:
+            try:
+                img = Image.open(file)
+                img = preprocess(img)
+            except UnidentifiedImageError:
+                error = "That file is not a valid image. Please upload a leaf photo."
+            else:
+                probs = model.predict(img)[0]
+                idx = int(np.argmax(probs))
 
-            pred = model.predict(img)
-            prediction = class_names[np.argmax(pred)]
+                prediction = class_names[idx]
+                confidence = round(float(probs[idx]) * 100, 2)
+                suggestion = suggestions.get(prediction, "No suggestion available.")
 
-    return render_template("index.html", prediction=prediction)
+    return render_template(
+        "index.html",
+        prediction=prediction,
+        confidence=confidence,
+        suggestion=suggestion,
+        error=error
+    )
 
 if __name__ == "__main__":
-    app.run(debug=True)
-#     app.run(debug=True)from tensorflow.keras.preprocessing.image import ImageDataGenerator
-# from tensorflow.keras.models import Sequential
-# from tensorflow.keras.layers import Conv2D, MaxPooling2D, Flatten, Dense, Dropout, Input
-# import json
-# import os
-
-# # Data generators
-# train_gen = ImageDataGenerator(rescale=1./255)
-# val_gen = ImageDataGenerator(rescale=1./255)
-
-# train_data = train_gen.flow_from_directory(
-#     r"C:\Users\sarth\OneDrive\Desktop\project plant\Dataset\train",
-#     target_size=(224,224),
-#     batch_size=32,
-#     class_mode='categorical'
-# )
-
-# val_data = val_gen.flow_from_directory(
-#     r"C:\Users\sarth\OneDrive\Desktop\project plant\Dataset\valid",
-#     target_size=(224,224),
-#     batch_size=32,
-#     class_mode='categorical'
-# )
-
-# # ✅ Save class names (VERY IMPORTANT)
-# class_names = list(train_data.class_indices.keys())
-# os.makedirs("model", exist_ok=True)
-
-# with open("model/class_names.json", "w") as f:
-#     json.dump(class_names, f)
-
-# # Model
-# model = Sequential([
-#     Input(shape=(224,224,3)),
-
-#     Conv2D(32, (3,3), activation='relu'),
-#     MaxPooling2D(),
-
-#     Conv2D(64, (3,3), activation='relu'),
-#     MaxPooling2D(),
-
-#     Conv2D(128, (3,3), activation='relu'),
-#     MaxPooling2D(),
-
-#     Flatten(),
-#     Dense(128, activation='relu'),
-#     Dropout(0.5),
-
-#     Dense(train_data.num_classes, activation='softmax')
-# ])
-
-# model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
-
-# model.fit(train_data, epochs=5, validation_data=val_data)  
-
-# # ✅ Save in new format
-# model.save("model/plant_model.keras")
-
-# print("✅ Model + class names saved!")<!DOCTYPE html>
-# <html lang="en">
-# <head>
-#     <meta charset="UTF-8">
-#     <title>Plant Disease Detector 🌿</title>
-#     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-# </head>
-# <body>
-
-# <div class="container">
-
-#     <h1 class="title">🌿 Plant Disease Detection</h1>
-#     <p class="subtitle">Upload a leaf image to detect disease instantly</p>
-
-#     <form method="POST" enctype="multipart/form-data" class="upload-box">
-        
-#         <input type="file" name="image" id="fileInput" required>
-        
-#         <label for="fileInput" class="custom-file">
-#             📁 Choose Image
-#         </label>
-
-#         <button type="submit" class="btn">🔍 Predict</button>
-#     </form>
-
-#     {% if prediction %}
-#     <div class="result-box">
-#         <h2>Prediction:</h2>
-#         <p class="result">{{ prediction }}</p>
-#     </div>
-#     {% endif %}
-
-# </div>
-
-# </body>
-# </html>/* 🌈 Background Gradient Animation */
-# body {
-#     margin: 0;
-#     font-family: 'Segoe UI', sans-serif;
-#     background: linear-gradient(-45deg, #1b5e20, #43a047, #66bb6a, #a5d6a7);
-#     background-size: 400% 400%;
-#     animation: gradientBG 10s ease infinite;
-#     color: white;
-#     text-align: center;
-# }
-
-# /* 🌿 Container */
-# .container {
-#     margin-top: 80px;
-#     animation: fadeIn 1.5s ease;
-# }
-
-# /* ✨ Title */
-# .title {
-#     font-size: 40px;
-#     font-weight: bold;
-#     animation: slideDown 1s ease;
-# }
-
-# .subtitle {
-#     margin-bottom: 30px;
-#     font-size: 18px;
-#     opacity: 0.9;
-# }
-
-# /* 📦 Upload Box */
-# .upload-box {
-#     display: inline-block;
-#     padding: 30px;
-#     border-radius: 15px;
-#     background: rgba(255,255,255,0.1);
-#     backdrop-filter: blur(10px);
-#     box-shadow: 0 8px 32px rgba(0,0,0,0.2);
-#     animation: fadeInUp 1.2s ease;
-# }
-
-# /* Hide default input */
-# input[type="file"] {
-#     display: none;
-# }
-
-# /* Custom file button */
-# .custom-file {
-#     display: inline-block;
-#     padding: 12px 20px;
-#     background: white;
-#     color: #2e7d32;
-#     border-radius: 8px;
-#     cursor: pointer;
-#     margin-bottom: 15px;
-#     transition: 0.3s;
-# }
-
-# .custom-file:hover {
-#     background: #c8e6c9;
-# }
-
-# /* Predict button */
-# .btn {
-#     display: block;
-#     width: 100%;
-#     padding: 12px;
-#     background: #00c853;
-#     border: none;
-#     border-radius: 8px;
-#     color: white;
-#     font-size: 16px;
-#     cursor: pointer;
-#     transition: 0.3s;
-# }
-
-# .btn:hover {
-#     background: #00e676;
-#     transform: scale(1.05);
-# }
-
-# /* 📊 Result Box */
-# .result-box {
-#     margin-top: 30px;
-#     padding: 20px;
-#     border-radius: 12px;
-#     background: rgba(0,0,0,0.3);
-#     animation: popUp 0.6s ease;
-# }
-
-# .result {
-#     font-size: 22px;
-#     font-weight: bold;
-#     color: #a5d6a7;
-# }
-
-# /* 🔥 Animations */
-# @keyframes gradientBG {
-#     0% { background-position: 0% 50%; }
-#     50% { background-position: 100% 50%; }
-#     100% { background-position: 0% 50%; }
-# }
-
-# @keyframes fadeIn {
-#     from {opacity: 0;}
-#     to {opacity: 1;}
-# }
-
-# @keyframes fadeInUp {
-#     from {
-#         transform: translateY(40px);
-#         opacity: 0;
-#     }
-#     to {
-#         transform: translateY(0);
-#         opacity: 1;
-#     }
-# }
-
-# @keyframes slideDown {
-#     from {
-#         transform: translateY(-50px);
-#         opacity: 0;
-#     }
-#     to {
-#         transform: translateY(0);
-#         opacity: 1;
-#     }
-# }
-
-# @keyframes popUp {
-#     from {
-#         transform: scale(0.8);
-#         opacity: 0;
-#     }
-#     to {
-#         transform: scale(1);
-#         opacity: 1;
-#     }
-# }
-
-
-
-
-
-
-
-# # from flask import Flask, render_template, request
-# # from tensorflow.keras.models import load_model
-# # from PIL import Image
-# # import numpy as np
-
-# # app = Flask(__name__)
-
-# # model = load_model("model/plant_model.h5")
-
-# # class_names = list(train_data.class_indices.keys())
-
-# # def preprocess(img):
-# #     img = img.resize((224,224))
-# #     img = np.array(img)/255.0
-# #     img = np.expand_dims(img, axis=0)
-# #     return img
-
-# # @app.route("/", methods=["GET", "POST"])
-# # def index():
-# #     prediction = ""
-
-# #     if request.method == "POST":
-# #         file = request.files["image"]
-# #         img = Image.open(file)
-
-# #         img = preprocess(img)
-# #         pred = model.predict(img)
-
-# #         prediction = class_names[np.argmax(pred)]
-
-# #     return render_template("index.html", prediction=prediction)
-
-# # if __name__ == "__main__":
-# #     app.run(debug=True)
+    # Debug mode is opt-in; never enable the interactive debugger in production.
+    debug = os.environ.get("FLASK_DEBUG", "0") == "1"
+    app.run(debug=debug)

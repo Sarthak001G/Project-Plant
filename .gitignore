@@ -1,0 +1,25 @@
+# Virtual environment
+.venv/
+__pycache__/
+*.pyc
+
+# IDE
+.vscode/
+.idea/
+
+# Dataset (too large for git)
+Dataset/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Old model format (keep only .keras)
+model/plant_model.h5
+model/plant_model.keras
+
+# Temporary files
+*.tmp
+*.bak
+templates/index_backup.html
+static/style_backup.css

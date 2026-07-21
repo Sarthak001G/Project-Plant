@@ -1,30 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>🌿 Plant Disease Detector</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌿 Plant Disease Detector — AI-Powered Leaf Diagnosis</title>
+    <meta name="description" content="Upload a leaf photo and get instant AI-powered plant disease detection with treatment suggestions for tomato and potato crops.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-
-<div class="container">
-
-    <h1 class="title">🌿 Plant Disease Detection</h1>
-    <p class="subtitle">Upload a leaf image to detect disease instantly</p>
-
-    <form method="POST" enctype="multipart/form-data" class="upload-box">
-        <input type="file" name="image" id="fileInput" required>
-        <label for="fileInput" class="custom-file">📁 Choose Image</label>
-        <button type="submit" class="btn">🔍 Predict</button>
-    </form>
-
-    {% if prediction %}
-    <div class="result-box">
-        <h2>Prediction:</h2>
-        <p class="result">{{ prediction }}</p>
+    <!-- Animated background particles -->
+    <div class="bg-particles" aria-hidden="true">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
     </div>
-    {% endif %}
 
-</div>
+    <div class="app-wrapper">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="logo">
+                <span class="logo-icon">🌿</span>
+                <span class="logo-text">PlantGuard</span>
+            </div>
+            <p class="tagline">AI-Powered Plant Disease Detection</p>
+        </header>
 
+        <!-- Main Card -->
+        <main class="main-card">
+            <div class="card-inner">
+                <h1 class="card-title">Diagnose Your Plant</h1>
+                <p class="card-subtitle">Upload a leaf image and our AI will instantly identify diseases and recommend treatments</p>
+
+                <!-- Upload Form -->
+                <form method="POST" enctype="multipart/form-data" class="upload-form" id="uploadForm">
+                    <div class="dropzone" id="dropzone">
+                        <div class="dropzone-content" id="dropzoneContent">
+                            <div class="dropzone-icon">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                            </div>
+                            <p class="dropzone-text">Drag & drop your leaf image here</p>
+                            <p class="dropzone-hint">or click to browse • JPG, PNG up to 8MB</p>
+                        </div>
+                        <div class="preview-container" id="previewContainer" style="display:none;">
+                            <img id="imagePreview" class="image-preview" alt="Leaf preview">
+                            <button type="button" class="remove-btn" id="removeBtn" title="Remove image">✕</button>
+                        </div>
+                        <input type="file" name="image" id="fileInput" accept="image/*" required>
+                    </div>
+                    <button type="submit" class="predict-btn" id="predictBtn">
+                        <span class="btn-text">🔬 Analyze Leaf</span>
+                        <span class="btn-loading" style="display:none;">
+                            <span class="spinner"></span> Analyzing...
+                        </span>
+                    </button>
+                </form>
+
+                {% if error %}
+                <!-- Error Message -->
+                <div class="result-section error-section fade-in">
+                    <div class="result-icon error-icon">⚠️</div>
+                    <p class="error-text">{{ error }}</p>
+                </div>
+                {% endif %}
+
+                {% if prediction %}
+                <!-- Results Section -->
+                <div class="result-section fade-in">
+                    <div class="result-header">
+                        <div class="result-icon">
+                            {% if 'healthy' in prediction.lower() or 'Healthy' in prediction %}
+                                ✅
+                            {% else %}
+                                🔴
+                            {% endif %}
+                        </div>
+                        <div>
+                            <h2 class="result-label">Diagnosis</h2>
+                            <p class="result-value {% if 'healthy' in prediction.lower() or 'Healthy' in prediction %}healthy{% else %}diseased{% endif %}">
+                                {{ prediction | replace('_', ' ') | replace('___', ' — ') }}
+                            </p>
+                        </div>
+                    </div>
+
+                    {% if confidence %}
+                    <div class="confidence-section">
+                        <div class="confidence-header">
+                            <span class="confidence-label">Confidence</span>
+                            <span class="confidence-value">{{ confidence }}%</span>
+                        </div>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" style="width: {{ confidence }}%;"
+                                 data-confidence="{{ confidence }}"></div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    {% if suggestion %}
+                    <div class="suggestion-box">
+                        <h3 class="suggestion-title">💡 Treatment Recommendation</h3>
+                        <p class="suggestion-text">{{ suggestion }}</p>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </main>
+
+        <!-- Supported Crops -->
+        <section class="info-section">
+            <h2 class="info-title">Supported Crops & Diseases</h2>
+            <div class="crop-grid">
+                <div class="crop-card">
+                    <span class="crop-emoji">🥔</span>
+                    <h3>Potato</h3>
+                    <ul>
+                        <li>Early Blight</li>
+                        <li>Late Blight</li>
+                        <li>Healthy</li>
+                    </ul>
+                </div>
+                <div class="crop-card">
+                    <span class="crop-emoji">🍅</span>
+                    <h3>Tomato</h3>
+                    <ul>
+                        <li>Bacterial Spot</li>
+                        <li>Early / Late Blight</li>
+                        <li>Leaf Mold</li>
+                        <li>Septoria Leaf Spot</li>
+                        <li>Spider Mites</li>
+                        <li>Target Spot</li>
+                        <li>Mosaic Virus</li>
+                        <li>Yellow Leaf Curl Virus</li>
+                        <li>Healthy</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="app-footer">
+            <p>Built with ❤️ using TensorFlow & MobileNetV2 • Plant Disease Detection AI</p>
+        </footer>
+    </div>
+
+    <script>
+        // Drag & Drop + Preview
+        const dropzone = document.getElementById('dropzone');
+        const fileInput = document.getElementById('fileInput');
+        const dropzoneContent = document.getElementById('dropzoneContent');
+        const previewContainer = document.getElementById('previewContainer');
+        const imagePreview = document.getElementById('imagePreview');
+        const removeBtn = document.getElementById('removeBtn');
+        const predictBtn = document.getElementById('predictBtn');
+        const uploadForm = document.getElementById('uploadForm');
+
+        dropzone.addEventListener('click', () => fileInput.click());
+
+        ['dragenter', 'dragover'].forEach(evt => {
+            dropzone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropzone.classList.add('drag-over');
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(evt => {
+            dropzone.addEventListener(evt, e => {
+                e.preventDefault();
+                dropzone.classList.remove('drag-over');
+            });
+        });
+
+        dropzone.addEventListener('drop', e => {
+            const files = e.dataTransfer.files;
+            if (files.length) {
+                fileInput.files = files;
+                showPreview(files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', () => {
+            if (fileInput.files.length) {
+                showPreview(fileInput.files[0]);
+            }
+        });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                imagePreview.src = e.target.result;
+                dropzoneContent.style.display = 'none';
+                previewContainer.style.display = 'flex';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            fileInput.value = '';
+            dropzoneContent.style.display = 'flex';
+            previewContainer.style.display = 'none';
+        });
+
+        uploadForm.addEventListener('submit', () => {
+            predictBtn.querySelector('.btn-text').style.display = 'none';
+            predictBtn.querySelector('.btn-loading').style.display = 'inline-flex';
+            predictBtn.disabled = true;
+        });
+
+        // Animate confidence bar on load
+        document.addEventListener('DOMContentLoaded', () => {
+            const fill = document.querySelector('.confidence-fill');
+            if (fill) {
+                const width = fill.getAttribute('data-confidence') + '%';
+                fill.style.width = '0%';
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        fill.style.width = width;
+                    });
+                });
+            }
+        });
+    </script>
 </body>
 </html>
