@@ -1,0 +1,3 @@
+# Plant Disease Detection Using Deep Learning
+
+This project is a deep learning-based plant disease detection system that classifies plant leaf images into 38 different disease categories. The model is built using TensorFlow/Keras with the EfficientNetB4 architecture and transfer learning to achieve high classification accuracy. The dataset is preprocessed using image resizing, normalization, and augmentation techniques to improve model generalization. The system helps identify plant diseases quickly and accurately, making it useful for farmers, researchers, and agricultural applications. This repository includes the complete training pipeline, model architecture, preprocessing steps, evaluation, and inference code, enabling easy reproduction and further development.
